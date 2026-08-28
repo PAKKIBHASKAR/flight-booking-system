@@ -1,4 +1,13 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+let rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+// Strip trailing slashes
+rawBaseUrl = rawBaseUrl.replace(/\/+$/, '');
+
+// If user entered backend host without /api suffix, append /api
+if (rawBaseUrl.startsWith('http') && !rawBaseUrl.endsWith('/api')) {
+  rawBaseUrl += '/api';
+}
+
+const API_BASE_URL = rawBaseUrl;
 
 export function getAuthToken() {
   return localStorage.getItem('skyway_auth_token');
@@ -24,7 +33,10 @@ async function request(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  // Ensure endpoint starts with a single slash
+  const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+  const response = await fetch(`${API_BASE_URL}${formattedEndpoint}`, {
     ...options,
     headers
   });
